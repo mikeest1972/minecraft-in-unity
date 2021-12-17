@@ -12,13 +12,78 @@ public class Chunck : MonoBehaviour
     private List<Vector2> uvs = new List<Vector2>();
 
     private int triangleVertexIndex = 0;
+    World world;
+    byte [,,] voxelMap = new byte[ChunckData.width,ChunckData.height,ChunckData.width];
     void Start()
     {
+        world = GameObject.Find("World").GetComponent<World>();
         transform.position = Vector3.zero;
+        populateVoxelMap();
         addChunckData();
         addMesh();
         
     }
+    void populateVoxelMap()
+    {
+        for (int y = 0; y < ChunckData.height; y++)
+        {
+            for (int x = 0; x < ChunckData.width; x++)
+            {
+                for (int z = 0; z < ChunckData.width; z++)
+                {
+
+                    if(y <= 1)
+                    {
+                        // bed rock
+                        voxelMap[x,y,z] = 0;
+                    }
+                    else if (y > 1 && y < ChunckData.height-2)
+                    {
+                        voxelMap[x,y,z] = 1;
+                    }
+                    else if (y == ChunckData.height-1)
+                    {
+                        voxelMap[x,y,z] = 3;
+                    }
+                    // else if (y > 1 && y < ChunckData.height-10)
+                    // {
+                    //     voxelMap[x,y,z] = 1;
+                    // }
+                    // else if (y > ChunckData.height -10 && y < ChunckData.height -1)
+                    // {
+                    //     voxelMap[x,y,z] = 2;
+                    // }
+                    // else if (y > ChunckData.height -1)
+                    // {
+                    //     voxelMap[x,y,z] = 3;
+                    // }
+                    else// if (y > ChunckData.height -10)
+                    {
+                        voxelMap[x,y,z] = 2;
+                    }
+                    
+
+
+                }
+            }
+            
+        }
+    }
+    bool checkVoxel(Vector3 pos)
+    {
+        // checks if there is a voxel there
+        int x = Mathf.FloorToInt(pos.x);
+        int y = Mathf.FloorToInt(pos.y);
+        int z = Mathf.FloorToInt(pos.z);
+        if(x < 0 || x > ChunckData.width -1 || y < 0 || y > ChunckData.height -1 || z < 0 || z > ChunckData.width-1)
+        {
+            // handles the case where the index will be outside of the array 
+            // -1 or anyting grater than the size of its
+            return false;
+        }
+        return world.blockTypes[voxelMap[x,y,z]].isSolid;
+    }
+
     private void addMesh()
     {
         Mesh mesh = new Mesh();
@@ -32,33 +97,60 @@ public class Chunck : MonoBehaviour
     }
     private void addChunckData()
     {
-        for(int w = 0; w<ChunckData.width; w++)
+        for(int y = 0; y<ChunckData.height; y++)
         {
-            for(int l = 0; l<ChunckData.length;l++)
+            for(int x = 0; x<ChunckData.width;x++)
             {
-                Vector3 shift = new Vector3(w,0,l);
-                addBlockData(shift);
+                for (int z = 0; z < ChunckData.width; z++)
+                {
+                    Vector3 shift = new Vector3(x,y,z);
+                    addBlockDataToChunck(shift);
+                }
+                
             }
         }
     }
-    private void addBlockData(Vector3 shift)
+    private void addBlockDataToChunck(Vector3 pos)
     {
         // add 1 block data
         for(int i = 0; i < 6; i++)
         {
-            for(int j = 0; j < 6; j++)
+            if(!checkVoxel(pos+BlockData.faceChecks[i]))
             {
-                
-                int currentVertexIndex = BlockData.blockTriangles[i,j];
-                Vector3 currentVertex = BlockData.verticies[currentVertexIndex] + shift;
-                vertices.Add(currentVertex);
+                byte blockID = voxelMap[(int)pos.x,(int)pos.y,(int)pos.z];
+                vertices.Add(pos+BlockData.verticies[BlockData.blockTriangles[i,0]]);
+                vertices.Add(pos+BlockData.verticies[BlockData.blockTriangles[i,1]]);
+                vertices.Add(pos+BlockData.verticies[BlockData.blockTriangles[i,2]]);
+                vertices.Add(pos+BlockData.verticies[BlockData.blockTriangles[i,3]]);
+                addTexture(world.blockTypes[blockID].getTextureID(i)); // adds the texture to each fase
                 triangles.Add(triangleVertexIndex);
-                triangleVertexIndex++;
-                uvs.Add(BlockData.grassBlockUvs[i,j]);
-
-
+                triangles.Add(triangleVertexIndex+1);
+                triangles.Add(triangleVertexIndex+2);
+                triangles.Add(triangleVertexIndex+2);
+                triangles.Add(triangleVertexIndex+1);
+                triangles.Add(triangleVertexIndex+3);
+                triangleVertexIndex +=4;
+                
             }
+            
         }
+    }
+    void addTexture(int textureID)
+    {
+        // cool way of indexing the texture atlas
+        // stone is 0 to coal 3
+        // wood planks 4 ... and so on
+        float y = textureID/ BlockData.TextureAtlasSizeInBlock;
+        float x = textureID - (y * BlockData.TextureAtlasSizeInBlock);
+
+        x *= BlockData.NormalizedBlockTextureSize;
+        y *= BlockData.NormalizedBlockTextureSize;
+
+        y = 1f - y - BlockData.NormalizedBlockTextureSize;
+        uvs.Add(new Vector2(x,y));
+        uvs.Add(new Vector2(x,y+ BlockData.NormalizedBlockTextureSize));
+        uvs.Add(new Vector2(x+ BlockData.NormalizedBlockTextureSize,y));
+        uvs.Add(new Vector2(x+ BlockData.NormalizedBlockTextureSize,y+ BlockData.NormalizedBlockTextureSize));
     }
     
 }

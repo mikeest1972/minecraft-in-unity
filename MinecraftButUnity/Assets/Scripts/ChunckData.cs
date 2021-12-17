@@ -6,5 +6,5 @@ public static class ChunckData
 {
     public static readonly int width = 16;
     public static readonly int length = 16;
-    public static readonly int height = 10;
+    public static readonly int height = 20;
 }
