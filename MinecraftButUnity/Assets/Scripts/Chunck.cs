@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Chunck : MonoBehaviour
+public class Chunck
 {
+    public ChunckCoord coord;
+    GameObject chunckObject;
     public MeshFilter meshFilter;
     public MeshRenderer meshRenderer;
 
@@ -14,14 +16,31 @@ public class Chunck : MonoBehaviour
     private int triangleVertexIndex = 0;
     World world;
     byte [,,] voxelMap = new byte[ChunckData.width,ChunckData.height,ChunckData.width];
-    void Start()
+    // void Start()
+    // {
+    //     world = GameObject.Find("World").GetComponent<World>();
+    //     transform.position = Vector3.zero;
+    //     populateVoxelMap();
+    //     addChunckData();
+    //     addMesh();
+        
+    // }
+    public Chunck(ChunckCoord c, World w)
     {
-        world = GameObject.Find("World").GetComponent<World>();
-        transform.position = Vector3.zero;
+        coord = c;
+        world = w;
+        chunckObject = new GameObject();
+        meshFilter = chunckObject.AddComponent<MeshFilter>();
+        meshRenderer = chunckObject.AddComponent<MeshRenderer>();
+        meshRenderer.material = world.material;
+        chunckObject.transform.SetParent(world.transform);
+        chunckObject.transform.position = new Vector3(coord.x * ChunckData.width,0f,coord.z * ChunckData.width);
+        chunckObject.name = "Chunck " + coord.x + ", " + coord.z;
+        //chunckObject.transform.position = Vector3.zero;
         populateVoxelMap();
         addChunckData();
         addMesh();
-        
+
     }
     void populateVoxelMap()
     {
@@ -32,35 +51,7 @@ public class Chunck : MonoBehaviour
                 for (int z = 0; z < ChunckData.width; z++)
                 {
 
-                    if(y <= 1)
-                    {
-                        // bed rock
-                        voxelMap[x,y,z] = 0;
-                    }
-                    else if (y > 1 && y < ChunckData.height-2)
-                    {
-                        voxelMap[x,y,z] = 1;
-                    }
-                    else if (y == ChunckData.height-1)
-                    {
-                        voxelMap[x,y,z] = 3;
-                    }
-                    // else if (y > 1 && y < ChunckData.height-10)
-                    // {
-                    //     voxelMap[x,y,z] = 1;
-                    // }
-                    // else if (y > ChunckData.height -10 && y < ChunckData.height -1)
-                    // {
-                    //     voxelMap[x,y,z] = 2;
-                    // }
-                    // else if (y > ChunckData.height -1)
-                    // {
-                    //     voxelMap[x,y,z] = 3;
-                    // }
-                    else// if (y > ChunckData.height -10)
-                    {
-                        voxelMap[x,y,z] = 2;
-                    }
+                    voxelMap[x,y,z] = world.getVoxel(new Vector3(x,y,z) + position);
                     
 
 
@@ -69,17 +60,40 @@ public class Chunck : MonoBehaviour
             
         }
     }
+
+    public bool isActive
+    {
+        get {return chunckObject.activeSelf;}
+        set {chunckObject.SetActive(value);}
+    }
+
+    public Vector3 position{
+        get{return chunckObject.transform.position;}
+    }
+    bool isVoxelInChunck(int x, int y, int z)
+    {
+        if(x < 0 || x > ChunckData.width -1 || y < 0 || y > ChunckData.height -1 || z < 0 || z > ChunckData.width-1)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+        
+    }
+    
     bool checkVoxel(Vector3 pos)
     {
         // checks if there is a voxel there
         int x = Mathf.FloorToInt(pos.x);
         int y = Mathf.FloorToInt(pos.y);
         int z = Mathf.FloorToInt(pos.z);
-        if(x < 0 || x > ChunckData.width -1 || y < 0 || y > ChunckData.height -1 || z < 0 || z > ChunckData.width-1)
+        if(!isVoxelInChunck(x,y,z))
         {
             // handles the case where the index will be outside of the array 
             // -1 or anyting grater than the size of its
-            return false;
+            return world.blockTypes[world.getVoxel(pos+position)].isSolid;
         }
         return world.blockTypes[voxelMap[x,y,z]].isSolid;
     }
@@ -153,4 +167,35 @@ public class Chunck : MonoBehaviour
         uvs.Add(new Vector2(x+ BlockData.NormalizedBlockTextureSize,y+ BlockData.NormalizedBlockTextureSize));
     }
     
+}
+
+
+
+public class ChunckCoord
+{
+    // positno of the chunck
+    public int x;
+    public int z;
+
+    public ChunckCoord(int xC, int zC)
+    {
+        x = xC;
+        z = zC;
+    }
+
+    public bool Eqeuals(ChunckCoord other)
+    {
+        if(other == null)
+        {
+            return false;
+        }
+        else if (other.x == x && other.z == z)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }    
 }
