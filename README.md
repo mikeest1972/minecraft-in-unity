@@ -11,6 +11,7 @@ Current state of the project
 - Added multiple chuncks and a render distance
 - added better performance for chuncks
 - Made chuncks render as they are needed depending on players positon in world
+![alt text](https://raw.githubusercontent.com/mikeest1972/minecraft-in-unity/main/min_unity_v1.gif)
 
 [Dec 16 2021]
 - I created a basic voxel that only renders the outside cubes an not the inside ones to have good preformance
