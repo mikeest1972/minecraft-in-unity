@@ -50,11 +50,8 @@ public class Chunck
             {
                 for (int z = 0; z < ChunckData.width; z++)
                 {
-
                     voxelMap[x,y,z] = world.getVoxel(new Vector3(x,y,z) + position);
                     
-
-
                 }
             }
             
@@ -117,8 +114,12 @@ public class Chunck
             {
                 for (int z = 0; z < ChunckData.width; z++)
                 {
-                    Vector3 shift = new Vector3(x,y,z);
-                    addBlockDataToChunck(shift);
+                    if(world.blockTypes[voxelMap[x,y,z]].isSolid)
+                    {
+                        Vector3 shift = new Vector3(x,y,z);
+                        addBlockDataToChunck(shift);
+                    }
+                    
                 }
                 
             }

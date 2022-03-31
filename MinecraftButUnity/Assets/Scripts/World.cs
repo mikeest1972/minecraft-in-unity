@@ -9,12 +9,15 @@ public class World : MonoBehaviour
     public Material material;
     public BlockType[] blockTypes;
 
+    /// seed for the random world generation
+    public int seed;
+    public  BiomeAttributes biome;
     Chunck[,] chuncks = new Chunck[ChunckData.worldSizeInChuncks,ChunckData.worldSizeInChuncks];
     List<ChunckCoord> activeChuncks = new List<ChunckCoord>();
     ChunckCoord playerChunckCoord;
     ChunckCoord playerLastChunckCoord;
     private void Start() {
-
+        Random.InitState(seed); // initilizes the seed value
         spawnPosition = new Vector3((ChunckData.worldSizeInChuncks * ChunckData.width)/ 2f, ChunckData.height+5,(ChunckData.worldSizeInChuncks * ChunckData.width) / 2f);
         generateWorld();
         playerLastChunckCoord = getChunckCoordFromVector3(player.position);
@@ -70,29 +73,65 @@ public class World : MonoBehaviour
         }
     }
 
-    public  byte getVoxel (Vector3 pos)
+    public byte getVoxel (Vector3 pos)
     {
+        int yPos = Mathf.FloorToInt(pos.y);
+        // imutable pass
+
+        // outside the world like below bedrock or top
         if(!isVoxelInWorld(pos))
         {
-            return 0;
+            return 0; // air block
         }
-        if(pos.y <= 1)
+        // bottom block
+        if(yPos == 0)
         {
-            // bed rock
-            return 1;
+            return 1; // bedrock
         }
-        else if (pos.y > 1 && pos.y < ChunckData.height-2)
+
+        // basic terrain 
+
+        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.get2DPeflin(new Vector2(pos.x, pos.z),0,biome.terrainScale)) + biome.solidGroundHeight;
+        byte voxelValue = 0;
+        if(yPos == terrainHeight)
         {
-            return 2;
+            voxelValue = 4; // grass
         }
-        else if (pos.y == ChunckData.height-1)
+        else if (yPos < terrainHeight && yPos > terrainHeight - 4)
         {
-            return 4;
+            voxelValue = 3; // dirt block
+        }
+        else if (yPos > terrainHeight)
+        {
+            return 0; // air
         }
         else
         {
-            return 2;
+            voxelValue = 2; // stone
         }
+
+        // second pass
+
+        if (voxelValue == 2)
+        {
+            // do stuff
+            foreach (Load load in biome.loads)
+            {
+                if(yPos > load.minHeight && yPos < load.maxHeight)
+                {
+                    if (Noise.get3DPerlin(pos,load.noiseOffset,load.sacle,load.threshold))
+                    {
+                        voxelValue = load.blockID;
+                    }
+                } 
+            }
+        }
+
+        return voxelValue;
+
+        
+
+        
 
     }
     ChunckCoord getChunckCoordFromVector3(Vector3 pos)
