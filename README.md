@@ -5,7 +5,13 @@ This was heavilly inspiried by [@b3agz](https://github.com/b3agz)
 Still working on it! If you want to try it out just download and run in unity!
 
 Current state of the project
+[March 31 2022]
 
+- Added perlin nosie for terrain genration
+- Added load so now you can have caves and ores!
+- Increased the size of the chunck
+- Played around with terain generation and order of that gerneration
+![alt_text](https://github.com/mikeest1972/minecraft-in-unity/blob/main/perlinNoise.gif?raw=true)
 [Dec 17 2021]
 
 - Added multiple chuncks and a render distance
