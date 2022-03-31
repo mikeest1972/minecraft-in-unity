@@ -5,6 +5,7 @@ This was heavilly inspiried by [@b3agz](https://github.com/b3agz)
 Still working on it! If you want to try it out just download and run in unity!
 
 Current state of the project
+
 [March 31 2022]
 
 - Added perlin nosie for terrain genration
