@@ -6,6 +6,15 @@ Still working on it! If you want to try it out just download and run in unity!
 
 Current state of the project
 
+[April 5 2022]
+
+- Added a player
+- Player moves
+- Player can jump 
+- Player can look at the position the mouse is pointing at
+
+![alt_text](https://github.com/mikeest1972/minecraft-in-unity/blob/main/playerInWorld.gif)
+
 [March 31 2022]
 
 - Added perlin nosie for terrain genration
